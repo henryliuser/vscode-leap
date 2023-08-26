@@ -1,10 +1,9 @@
 {
-  "name": "leap",
-  "displayName": "Leap",
-  "description": "General-purpose motion plugin inspired by leap.nvim",
-  "icon": "media/icon.png",
+  "name": "szaldivar-leap",
+  "displayName": "Leap (with forwards and backwards)",
+  "description": "General-purpose motion plugin inspired by leap.nvim forked from the leap extension",
   "version": "0.0.3",
-  "publisher": "MurlocCra4ler",
+  "publisher": "szaldivar",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -14,10 +13,10 @@
   "keywords": [ "leap", "leap.nvim", "jump", "jumpy" ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/MurlocCra4ler/vscode-leap.git"
+    "url": "https://github.com/szaldivar/vscode-leap/tree/new-extension"
   },
   "bugs": {
-    "url": "https://github.com/MurlocCra4ler/vscode-leap/issues"
+    "url": "https://github.com/szaldivar/vscode-leap/issues"
   },
   "activationEvents": [],
   "main": "./out/extension.js",
