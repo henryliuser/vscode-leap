@@ -1,129 +1,179 @@
-import { Position, TextLine, TextEditor, window, Range, TextEditorDecorationType } from "vscode";
-import { ExtensionSettings, SearchDirection } from "./extension";
+import {
+  Position,
+  TextLine,
+  TextEditor,
+  window,
+  Range,
+  TextEditorDecorationType,
+} from "vscode";
+import { SearchDirection } from "./extension";
 
 let usedDecorationTypes: TextEditorDecorationType[] = [];
 
-export function find(searchString: string, matchCase: boolean, direction: SearchDirection, editor: TextEditor, settings: ExtensionSettings): Range[] {
-    const potentialMatches: Range[] = [];
-    if (searchString.length === 0) {
-        return potentialMatches;
-    }
+const LABELS = "eariotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQ" as const;
 
-    searchString = matchCase ? searchString : searchString.toLowerCase();
-    const visibleLines = getVisibleLines(editor, direction);
+export type PotentialMatch = {
+  range: Range;
+  label: string;
+  active: boolean;
+  decoretor?: TextEditorDecorationType;
+};
 
-    const anchor = searchString.slice(0, 2);
-    const anchorLength = Math.min(searchString.length, 2);
-    for (const line of visibleLines) {
-        const text = line.text + '  ';
-        console.log(text);
-        for (let character = 0; character < text.length; character++) {
-            const comperator = matchCase ? text.slice(character, character + anchorLength)
-                : text.slice(character, character + anchorLength).toLocaleLowerCase();
+export function findFirstChar(
+  searchChar: string,
+  direction: SearchDirection,
+  editor: TextEditor,
+): Map<string, PotentialMatch[]> {
+  let matches: Map<string, PotentialMatch[]> = new Map();
 
-            /* special handling for double whitespace */
-            if (comperator === anchor && anchor === '  ') {
-                if (((character === 0 || text.slice(character - 1, character) !== ' ') && !settings.whiteSpacesOnlyMatchNewLine) || character === text.length - 2) {
-                    potentialMatches.push(new Range(
-                        new Position(line.lineNumber, character),
-                        new Position(line.lineNumber, character)
-                    ));
-                }
-            } else if (comperator === anchor) {
-                potentialMatches.push(new Range(
-                    new Position(line.lineNumber, character),
-                    new Position(line.lineNumber, character + searchString.length)
-                ));
-            }
+  const [cursorLine, cursorColumn] = editor.selection.isEmpty
+    ? [editor.selection.active.line, editor.selection.active.character]
+    : [-1, -1];
+  const visibleLines = getVisibleLines(editor, direction, cursorLine);
+
+  for (const line of visibleLines) {
+    const text = line.text + "  ";
+    for (let character = 0; character < text.length - 1; character++) {
+      if (
+        checkSkipCharacter(
+          character,
+          line.lineNumber,
+          cursorLine,
+          cursorColumn,
+          direction,
+        )
+      )
+        continue;
+      const comparator = text.charAt(character).toLowerCase();
+
+      if (comparator === searchChar) {
+        const target = text.slice(character, character + 2).toLowerCase();
+        if (!matches.has(target)) {
+          matches.set(target, []);
         }
+        let targetMatches = matches.get(target);
+        if (targetMatches?.length === LABELS.length) continue;
+        targetMatches?.push({
+          range: new Range(
+            new Position(line.lineNumber, character),
+            new Position(line.lineNumber, character + 2),
+          ),
+          label: numberToCharacter(targetMatches.length),
+          active: true,
+        });
+      }
     }
+  }
 
-    if (searchString.length <= 2) {
-        return potentialMatches;
+  for (let [_target, targetMatches] of matches) {
+    for (let match of targetMatches) {
+      const decoration = createDecorationType(match.label);
+      editor.setDecorations(decoration, [{ range: match.range }]);
+      match.decoretor = decoration;
     }
+  }
 
-    const searchStringTail = searchString.slice(2).toLocaleLowerCase();
-    const searchResult: Range[] = [];
-    for (let i = 0; i < potentialMatches.length; i++) {
-        if (createLabels(i, searchStringTail.length) === searchStringTail) {
-            searchResult.push(potentialMatches[i]);
-        }
-    }
-
-    return searchResult;
+  return matches;
 }
 
-export function hightlight(searchResult: Range[], editor: TextEditor, showLabels: boolean): void {
-    for (let i = 0; i < usedDecorationTypes.length; i++) {
-        usedDecorationTypes[i].dispose();
+export function findSecond(
+  secondChar: string,
+  matches: Map<string, PotentialMatch[]>,
+): void {
+  for (let [target, targetMatches] of matches) {
+    if (target.charAt(1) !== secondChar) {
+      for (let match of targetMatches) {
+        match.active = false;
+        match.decoretor?.dispose();
+      }
     }
-
-    usedDecorationTypes = [];
-    for (let i = 0; i < searchResult.length; i++) {
-        const decorationType = createDecorationType(createLabels(i, 1), showLabels);
-        editor.setDecorations(decorationType, [{ range: searchResult[i] }]);
-        usedDecorationTypes.push(decorationType);
-    }
+  }
 }
 
-function createLabels(value: number, length: number): string {
-    let truffle = "";
-    for (let i = 0; i < length; i++) {
-        truffle += numberToCharacter(value % 26);
-        value = value / 26;
-    }
+export function findLabel(
+  search: string,
+  searchLabel: string,
+  matches: Map<string, PotentialMatch[]>,
+): PotentialMatch | undefined {
+  let targetMatches = matches.get(search);
+  if (targetMatches === undefined) return undefined;
+  for (const match of targetMatches) {
+    if (match.label === searchLabel) return match;
+  }
+  return undefined;
+}
 
-    return truffle;
+function checkSkipCharacter(
+  atChar: number,
+  lineNumber: number,
+  cursorLine: number,
+  cursorColumn: number,
+  direction: SearchDirection,
+): boolean {
+  if (lineNumber !== cursorLine) return false;
+  if (direction === "backwards") return atChar >= cursorColumn;
+  return atChar <= cursorColumn;
 }
 
 function numberToCharacter(value: number): string {
-    return "eariotnslcudpmhgbfywkvxzjq".charAt(value);
+  return "eariotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQ".charAt(value);
 }
 
-function getVisibleLines(editor: TextEditor, direction: SearchDirection): TextLine[] {
-    let textLines = [];
-    const ranges = editor.visibleRanges;
-    const cursorPosition = editor.selection.isEmpty ? editor.selection.active.line : -1;
+function getVisibleLines(
+  editor: TextEditor,
+  direction: SearchDirection,
+  cursorLine: number,
+): TextLine[] {
+  let textLines = [];
+  const ranges = editor.visibleRanges;
 
-    for (let range of ranges) {
-        for (let lineNumber = range.start.line; lineNumber <= range.end.line; lineNumber++) {
-            if (checkSkipLine(direction, lineNumber, cursorPosition)) {
-                continue;
-            } 
-            textLines.push(editor.document.lineAt(lineNumber));
-        }
+  for (let range of ranges) {
+    for (
+      let lineNumber = range.start.line;
+      lineNumber <= range.end.line;
+      lineNumber++
+    ) {
+      if (checkSkipLine(direction, lineNumber, cursorLine)) {
+        continue;
+      }
+      textLines.push(editor.document.lineAt(lineNumber));
     }
+  }
 
-    return textLines;
+  return textLines;
 }
 
-function checkSkipLine(direction: SearchDirection, lineNumber: number, cursorPosition: number): boolean {
-    if (direction === "both" || lineNumber === -1) {
-        return false;
-    }
-    return direction === "backwards" ? lineNumber > cursorPosition : lineNumber < cursorPosition;
+function checkSkipLine(
+  direction: SearchDirection,
+  lineNumber: number,
+  cursorPosition: number,
+): boolean {
+  if (lineNumber === -1) return false;
+  return direction === "backwards"
+    ? lineNumber > cursorPosition
+    : lineNumber < cursorPosition;
 }
 
-function createDecorationType(label: string, showLabels: boolean): TextEditorDecorationType { 
-    return window.createTextEditorDecorationType({
-        backgroundColor: 'var(--vscode-editor-findMatchHighlightBackground)',
-        light: {
-            after: showLabels ? {
-                contentText: label,
-                color: 'var(--vscode-editor-background)',
-                backgroundColor: 'var(--vscode-editor-foreground)',
-                fontWeight: 'bold',
-                border: '2px solid var(--vscode-editor-foreground)'
-            } : undefined
-        },
-        dark: {
-            after: showLabels ? {
-                contentText: label,
-                color: 'var(--vscode-editor-background)',
-                backgroundColor: 'var(--vscode-editor-foreground)',
-                fontWeight: 'bold',
-                border: '2px solid var(--vscode-editor-foreground)'
-            } : undefined
-        }
-    });
+function createDecorationType(label: string): TextEditorDecorationType {
+  return window.createTextEditorDecorationType({
+    backgroundColor: "var(--vscode-editor-findMatchHighlightBackground)",
+    light: {
+      after: {
+        contentText: label,
+        color: "var(--vscode-editor-background)",
+        backgroundColor: "var(--vscode-editor-foreground)",
+        fontWeight: "bold",
+        border: "2px solid var(--vscode-editor-foreground)",
+      },
+    },
+    dark: {
+      after: {
+        contentText: label,
+        color: "var(--vscode-editor-background)",
+        backgroundColor: "var(--vscode-editor-foreground)",
+        fontWeight: "bold",
+        border: "2px solid var(--vscode-editor-foreground)",
+      },
+    },
+  });
 }
