@@ -1,8 +1,8 @@
 {
   "name": "szaldivar-leap",
-  "displayName": "Leap (with forwards and backwards)",
+  "displayName": "Better Leap",
   "description": "General-purpose motion plugin inspired by leap.nvim forked from the leap extension",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "publisher": "szaldivar",
   "engines": {
     "vscode": "^1.77.0"
