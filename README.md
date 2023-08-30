@@ -1,4 +1,4 @@
-# Leap Extension for Visual Studio Code 
+# Leap Extension for Visual Studio Code
 
 Leap provides an easy way to move the cursor in vscode without using the mouse. Based on leap.nvim
 
