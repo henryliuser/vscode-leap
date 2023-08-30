@@ -28,42 +28,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "leap.find",
-        "title": "Leap Find: Open Widget"
-      },
-      {
         "command": "leap.find-forwards",
         "title": "Leap Find Forwards: Open Widget"
       },
       {
         "command": "leap.find-backwards",
         "title": "Leap Find Backwards: Open Widget"
-      },
-      {
-        "command": "leap.match-case",
-        "title": "Leap Find: Toggle Match Case"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "leap.find",
-        "key": "ctrl+alt+f"
-      },
-      {
-        "command": "leap.match-case",
-        "key": "alt+c"
-      }
-    ],
-    "configuration": [
-      {
-        "title": "Leap",
-        "properties": {
-          "leap.whiteSpacesOnlyMatchNewLine": {
-            "type": "boolean",
-            "default": false,
-            "description": "Determines if <space><space> should only match the new Line symbol like in leap.nvim"
-          }
-        }
       }
     ]
   },

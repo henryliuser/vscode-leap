@@ -1,25 +1,16 @@
-# Leap Extension for Visual Studio Code
+# Better Leap Extension for Visual Studio Code
 
 Leap provides an easy way to move the cursor in vscode without using the mouse. Based on leap.nvim
 
 ## Feature Overview
 
-![showcase](./media/showcase.gif?raw=true)
-
 Leap lets you jump to any location in the visible editor area by entering a two-character search pattern and then possibly a tag character to select your destination from multiple matches.
-
-The default key assignment to open the Leap widget is `Ctrl + Alt + F` and with `Alt + C` you can toggle the "Match Case" option.
 
 ## Extension Settings
 
 ### Keybindings
 
-Define new keybinds using the `"leap.find"`, `"leap.find-forwards"`, `"leap.find-backwards"` and `"leap.match-case"` commands.
-
-### Settings
-
-When searching for `<space><space>` leap will generate a label for every chain of whitespaces. To emulate the default behaviour of leap.nvim, which only shows labels
-at the end of every line, enable `"leap.whiteSpacesOnlyMatchNewLine"`.
+Define new keybinds using the `"leap.find-forwards"` and `"leap.find-backwards"` commands.
 
 ### Emulating Vim
 
@@ -29,16 +20,20 @@ Example using the [Vim extension](https://marketplace.visualstudio.com/items?ite
 "vim.normalModeKeyBindingsNonRecursive": [
     {
         "before": ["s"],
-        "commands": ["leap.find"]
+        "commands": ["leap.find-forwards"]
+    },
+    {
+        "before": ["S"],
+        "commands": ["leap.find-backwards"]
     }
 ]
 ```
 
-## Known Issues
-
-None, but feel free to report any bugs you may find :)
-
 ## Release Notes
+
+### 1.0.0
+
+Working like leap.nvim (showing labels from first key) - missing safe labels implementation
 
 ### 0.0.3
 

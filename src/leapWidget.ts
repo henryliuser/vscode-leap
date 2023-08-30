@@ -8,18 +8,17 @@ import {
   ExtensionContext,
   Selection,
 } from "vscode";
-import { ExtensionSettings, SearchDirection } from "./extension";
-import { find, hightlight } from "./find";
+import { SearchDirection } from "./extension";
+import { findFirstChar, findLabel, findSecond, PotentialMatch } from "./find";
 
 const MATCH_CASE_KEY = "match-case";
 
 export class LeapWidget {
   public isActive = true;
 
-  private matchCase: boolean = false;
   private direction: SearchDirection;
   private searchString = "";
-  private searchResult: Range[] = [];
+  private matches: Map<string, PotentialMatch[]> = new Map();
 
   private readonly quickPick: QuickPick<QuickPickItem> =
     window.createQuickPick();
@@ -29,8 +28,7 @@ export class LeapWidget {
     this.quickPick.title = "Leap Finder";
     this.quickPick.placeholder = "Find";
 
-    this.direction = "both";
-    this.createButtons();
+    this.direction = "forwards";
 
     this.quickPick.onDidTriggerButton(this.onDidTriggerButton.bind(this));
     this.quickPick.onDidChangeValue(this.onChangeValue.bind(this));
@@ -46,7 +44,7 @@ export class LeapWidget {
       console.error("show: Leapwidget has already been disposed!");
       return;
     }
-
+    this.quickPick.value = "";
     this.quickPick.show();
   }
 
@@ -54,42 +52,6 @@ export class LeapWidget {
     this.hide();
     this.quickPick.dispose();
     this.isActive = false;
-    this.context.globalState.update(MATCH_CASE_KEY, this.matchCase);
-  }
-
-  public toggleMatchCase(): void {
-    if (!this.isActive) {
-      console.error("toggleMatchCase: Leapwidget has already been disposed!");
-      return;
-    }
-
-    this.matchCase = !this.matchCase;
-    this.createButtons();
-    this.createSearch();
-  }
-
-  private createButtons(): void {
-    this.quickInputButtons = new Map<QuickInputButton, () => void>([
-      [
-        {
-          iconPath: this.matchCase
-            ? new ThemeIcon("preserve-case")
-            : new ThemeIcon("case-sensitive"),
-          tooltip: this.matchCase
-            ? "Match Case (Alt + C)"
-            : "Don't Match Case (Alt + C)",
-        },
-        this.toggleMatchCase.bind(this),
-      ],
-      [
-        {
-          iconPath: new ThemeIcon("widget-close"),
-          tooltip: "Close (Escape)",
-        },
-        this.close.bind(this),
-      ],
-    ]);
-    this.quickPick.buttons = [...this.quickInputButtons.keys()];
   }
 
   private createSearch() {
@@ -98,22 +60,42 @@ export class LeapWidget {
       return;
     }
 
-    this.searchResult = find(
-      this.searchString,
-      this.matchCase,
+    this.matches = findFirstChar(
+      this.searchString.toLowerCase(),
       this.direction,
       editor,
-      this.settings,
     );
-    const showLabels = this.searchString.length >= 2;
-    hightlight(this.searchResult, editor, showLabels);
 
-    if (this.searchResult.length === 1) {
-      editor.selections = [
-        new Selection(this.searchResult[0].start, this.searchResult[0].start),
-      ];
+    // if (this.searchResult.length === 1) {
+    //   editor.selections = [
+    //     new Selection(this.searchResult[0].start, this.searchResult[0].start),
+    //   ];
+    //   this.close();
+    // }
+  }
+
+  private searchSecond() {
+    findSecond(this.searchString.charAt(1).toLowerCase(), this.matches);
+  }
+
+  private searchLabel() {
+    const editor = window.activeTextEditor;
+    if (!editor) {
       this.close();
+      return;
     }
+
+    const result = findLabel(
+      this.searchString.slice(0, 2).toLowerCase(),
+      this.searchString.charAt(2),
+      this.matches,
+    );
+    if (!result) {
+      this.close();
+      return;
+    }
+    editor.selections = [new Selection(result.range.start, result.range.start)];
+    this.close();
   }
 
   private hide(): void {
@@ -121,16 +103,33 @@ export class LeapWidget {
       console.error("hide: Leapwidget has already been disposed!");
       return;
     }
+    this.disposeDecorations();
+  }
 
-    const editor = window.activeTextEditor;
-    if (editor) {
-      hightlight([], editor, false);
+  private disposeDecorations(): void {
+    for (let [_target, tagetMatches] of this.matches) {
+      for (let match of tagetMatches) {
+        if (match.active) {
+          match.active = false;
+          match.decoretor?.dispose();
+        }
+      }
     }
+    this.matches = new Map();
   }
 
   private onChangeValue(value: string): void {
     this.searchString = value;
-    this.createSearch();
+    if (value.length === 0) {
+      this.disposeDecorations();
+    } else if (value.length === 1) {
+      this.disposeDecorations();
+      this.createSearch();
+    } else if (value.length === 2) {
+      this.searchSecond();
+    } else if (value.length === 3) {
+      this.searchLabel();
+    }
   }
 
   private onDidTriggerButton(button: QuickInputButton): void {

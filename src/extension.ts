@@ -1,7 +1,7 @@
 import { commands, ExtensionContext, workspace } from "vscode";
 import { LeapWidget } from "./leapWidget";
 
-export type SearchDirection = "backwards" | "forwards" | "both";
+export type SearchDirection = "backwards" | "forwards";
 
 let widget: LeapWidget | undefined;
 
@@ -10,11 +10,6 @@ function getWidgetInstance(context: ExtensionContext): LeapWidget {
     widget = new LeapWidget(context);
   }
   return widget;
-}
-
-export interface ExtensionSettings {
-  /* determines if <space><space> should only match the new Line symbol like in leap.nvim */
-  whiteSpacesOnlyMatchNewLine: boolean;
 }
 
 export function activate(context: ExtensionContext) {
@@ -33,11 +28,6 @@ export function activate(context: ExtensionContext) {
         widget = getWidgetInstance(context);
         widget.setSearchDirection("backwards");
         widget.show();
-      }),
-      commands.registerCommand("leap.match-case", async () => {
-        if (widget && widget.isActive) {
-          widget.toggleMatchCase();
-        }
       }),
     ],
   );
