@@ -31,6 +31,11 @@ Example using the [Vim extension](https://marketplace.visualstudio.com/items?ite
 
 ## Release Notes
 
+### 1.1.0
+
+- Labels don't take space anymore (text does not shift when showing labels)
+- Labels are set from the cursor position rather than always from up to down
+
 ### 1.0.0
 
 Working like leap.nvim (showing labels from first key) - missing safe labels implementation
