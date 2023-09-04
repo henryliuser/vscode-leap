@@ -33,7 +33,10 @@ export function findFirstChar(
     : [-1, -1];
   const visibleLines = getVisibleLines(editor, direction, cursorLine);
 
-  for (const line of visibleLines) {
+  let [lineIndex, step] =
+    direction === "backwards" ? [visibleLines.length - 1, -1] : [0, 1];
+  while (lineIndex >= 0 && lineIndex < visibleLines.length) {
+    const line = visibleLines[lineIndex];
     const text = line.text + "  ";
     for (let character = 0; character < text.length - 1; character++) {
       if (
@@ -65,6 +68,7 @@ export function findFirstChar(
         });
       }
     }
+    lineIndex += step;
   }
 
   for (let [_target, targetMatches] of matches) {
