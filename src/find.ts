@@ -5,6 +5,8 @@ import {
   window,
   Range,
   TextEditorDecorationType,
+  DecorationRangeBehavior,
+  OverviewRulerLane,
 } from "vscode";
 import { SearchDirection } from "./extension";
 
@@ -160,19 +162,21 @@ function createDecorationType(label: string): TextEditorDecorationType {
     light: {
       after: {
         contentText: label,
+        margin: `0 -1ch 0 0;
+          position: absolute;`,
         color: "var(--vscode-editor-background)",
         backgroundColor: "var(--vscode-editor-foreground)",
-        fontWeight: "bold",
-        border: "2px solid var(--vscode-editor-foreground)",
+        height: "100%",
       },
     },
     dark: {
       after: {
         contentText: label,
+        margin: `0 -1ch 0 0;
+          position: absolute;`,
         color: "var(--vscode-editor-background)",
         backgroundColor: "var(--vscode-editor-foreground)",
-        fontWeight: "bold",
-        border: "2px solid var(--vscode-editor-foreground)",
+        height: "100%",
       },
     },
   });
