@@ -65,13 +65,6 @@ export class LeapWidget {
       this.direction,
       editor,
     );
-
-    // if (this.searchResult.length === 1) {
-    //   editor.selections = [
-    //     new Selection(this.searchResult[0].start, this.searchResult[0].start),
-    //   ];
-    //   this.close();
-    // }
   }
 
   private searchSecond() {

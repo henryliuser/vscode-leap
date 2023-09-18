@@ -5,12 +5,8 @@ import {
   window,
   Range,
   TextEditorDecorationType,
-  DecorationRangeBehavior,
-  OverviewRulerLane,
 } from "vscode";
 import { SearchDirection } from "./extension";
-
-let usedDecorationTypes: TextEditorDecorationType[] = [];
 
 const LABELS = "eariotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQ" as const;
 
@@ -28,9 +24,10 @@ export function findFirstChar(
 ): Map<string, PotentialMatch[]> {
   let matches: Map<string, PotentialMatch[]> = new Map();
 
-  const [cursorLine, cursorColumn] = editor.selection.isEmpty
-    ? [editor.selection.active.line, editor.selection.active.character]
-    : [-1, -1];
+  const [cursorLine, cursorColumn] = [
+    editor.selection.active.line,
+    editor.selection.active.character,
+  ];
   const visibleLines = getVisibleLines(editor, direction, cursorLine);
 
   let [lineIndex, step] =
