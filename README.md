@@ -31,6 +31,10 @@ Example using the [Vim extension](https://marketplace.visualstudio.com/items?ite
 
 ## Release Notes
 
+## 1.1.1
+
+- Working in visual mode (different behaviour to vim)
+
 ### 1.1.0
 
 - Labels don't take space anymore (text does not shift when showing labels)
