@@ -8,7 +8,7 @@ import {
 } from "vscode";
 import { SearchDirection } from "./extension";
 
-const LABELS = "eariotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQ" as const;
+const LABELS = "riotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQea" as const;
 
 export type PotentialMatch = {
   range: Range;
@@ -24,7 +24,7 @@ export function findFirstChar(
 ): Map<string, PotentialMatch[]> {
   let matches: Map<string, PotentialMatch[]> = new Map();
 
-  const [cursorLine, cursorColumn] = [
+  const [cursorLine, _cursorColumn] = [
     editor.selection.active.line,
     editor.selection.active.character,
   ];
@@ -36,16 +36,16 @@ export function findFirstChar(
     const line = visibleLines[lineIndex];
     const text = line.text + "  ";
     for (let character = 0; character < text.length - 1; character++) {
-      if (
-        checkSkipCharacter(
-          character,
-          line.lineNumber,
-          cursorLine,
-          cursorColumn,
-          direction,
-        )
-      )
-        continue;
+      // if (
+      //   checkSkipCharacter(
+      //     character,
+      //     line.lineNumber,
+      //     cursorLine,
+      //     cursorColumn,
+      //     direction,
+      //   )
+      // )
+      //   continue;
       const comparator = text.charAt(character).toLowerCase();
 
       if (comparator === searchChar) {
@@ -119,13 +119,13 @@ function checkSkipCharacter(
 }
 
 function numberToCharacter(value: number): string {
-  return "eariotnslcudpmhgbfywkvxzjqEARIOTNSLCUDPMHGBFYWKVXZJQ".charAt(value);
+  return LABELS.charAt(value);
 }
 
 function getVisibleLines(
   editor: TextEditor,
-  direction: SearchDirection,
-  cursorLine: number,
+  _direction: SearchDirection,
+  _cursorLine: number,
 ): TextLine[] {
   let textLines = [];
   const ranges = editor.visibleRanges;
@@ -136,9 +136,9 @@ function getVisibleLines(
       lineNumber <= range.end.line;
       lineNumber++
     ) {
-      if (checkSkipLine(direction, lineNumber, cursorLine)) {
-        continue;
-      }
+      // if (checkSkipLine(direction, lineNumber, cursorLine)) {
+      //   continue;
+      // }
       textLines.push(editor.document.lineAt(lineNumber));
     }
   }
@@ -160,6 +160,7 @@ function checkSkipLine(
 function createDecorationType(label: string): TextEditorDecorationType {
   return window.createTextEditorDecorationType({
     backgroundColor: "var(--vscode-editor-findMatchHighlightBackground)",
+    opacity: "1",
     light: {
       after: {
         contentText: label,
@@ -175,8 +176,8 @@ function createDecorationType(label: string): TextEditorDecorationType {
         contentText: label,
         margin: `0 -1ch 0 0;
           position: absolute;`,
-        color: "var(--vscode-editor-background)",
-        backgroundColor: "var(--vscode-editor-foreground)",
+        color: "var(--vscode-editor-foreground)",
+        backgroundColor: "#8A2BE2",
         height: "100%",
       },
     },
